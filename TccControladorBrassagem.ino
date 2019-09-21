@@ -4,14 +4,14 @@
 #include <RtcDS3231.h>
 
 struct EtapaQuente{
-  float tempMin;
-  float tempMax;
-  byte duracao;
+  float tempMin = 0;
+  float tempMax = 0;
+  byte duracao = 0;
 };
 
 struct Lupulos{
 
-  byte duracao;
+  byte duracao = 0;
 };
 
 struct Receita {
@@ -30,6 +30,8 @@ struct Receita {
 #define SQW_PIN 19 // UNO 2. No Mega, mude para 19
 #define INT_NUMBER_INTERRUPTION 4 // UNO 0. No Mega, mude para 4
 #define BUZZER 7
+//Porta do pino do rele resistencia
+#define RELE_RESISTENCIA 6
 
 // Define uma instancia do oneWire para comunicacao com o sensor
 OneWire oneWire(ONE_WIRE_BUS);
@@ -42,15 +44,18 @@ RtcDateTime compiled;
 RtcDateTime now;
 
 volatile bool intFlag = false; // Variável que indica se hounve interrupção
-boolean a=true;
-boolean b=false;
 float variacaoMinima;
 
+boolean alarmeAtivo= false;
+boolean statusResistencia = true;
+
+
+int _step = 1;
 
 void setup() { 
 
   Serial.begin(9600);
-  addVariacaoMinima(0.5);
+  addVariacaoMinima(1.5);
   
 
   iniciaSensorTemp();
@@ -62,6 +67,7 @@ void setup() {
   // Pullup no pino de interrupção
   pinMode(SQW_PIN, INPUT_PULLUP);
   pinMode(BUZZER,OUTPUT);
+  pinMode(RELE_RESISTENCIA,OUTPUT);
 }
 
 void loop() {
@@ -71,8 +77,8 @@ void loop() {
     
   struct Receita receita[10];
  
-  addEtapaMostura(receita[0].mostura,1,68,60);
-  addEtapaMostura(receita[0].mostura,2,75,10);
+  addEtapaMostura(receita[0].mostura,1,30,60);
+  addEtapaMostura(receita[0].mostura,2,35,10);
   addEtapaFervura(receita[0].fervura,96,60);
   addLupulo(receita[0].lupulo,1,10);
   addLupulo(receita[0].lupulo,2,20);
@@ -86,38 +92,20 @@ void loop() {
  addLupulo(receita[1].lupulo,1,10);
  addLupulo(receita[1].lupulo,2,20);*/
 
-  if(a){
-    a=false;
-    b=true;
-    setBuzzerTimer(receita[0].lupulo[0].duracao);  
-  }
-  
-
   RtcDateTime now = Rtc.GetDateTime();
   /*Serial.print(formatDate(now,"d/m/y") + " ");
   Serial.println(formatTime(now,"h:m:s"));
   Serial.println();*/
 
-  if (intFlag)
-  {
-    intFlag = false; // Reseta flag
-    DS3231AlarmFlag flag = Rtc.LatchAlarmsTriggeredFlags(); //Variável para testar qual alarme disparou
-    if (flag & DS3231AlarmFlag_Alarm1)
-    {
-      Serial.println(">>> Alarm 1 disparou <<<");
+ verificaAlarm();
 
-      if(b){
-        b=false;
-         setBuzzerTimer(receita[0].lupulo[1].duracao);
-      }
-      digitalWrite(BUZZER, HIGH);
-      delay(1000);
-      digitalWrite(BUZZER, LOW);
-       
-    }
-  }
-  
- etapaMostura(receita[0].mostura,sizeof(receita[0].mostura)/sizeof(EtapaQuente));
+ if(_step<3){
+ etapaMostura(receita[0].mostura,sizeof(receita[0].mostura)/sizeof(EtapaQuente)); 
+ }
+ else{
+  Serial.println("Brassagem Finalizada");
+ }
+ 
 }
 
 void addEtapaMostura(EtapaQuente etapa[],int posicao, float tempMax, byte tempo){
@@ -230,8 +218,9 @@ void setBuzzerTimer(byte valor){
 
   // Efetiva os alarmes
   Rtc.LatchAlarmsTriggeredFlags();
+  alarmeAtivo = true;
 
-  /*
+  
   Serial.print("Hora do agora ");
   Serial.print(formatDate(now,"d/m/y") + " ");
   Serial.print(formatTime(now,"h:m:s"));
@@ -243,12 +232,84 @@ void setBuzzerTimer(byte valor){
   Serial.print("--> ");
   Serial.print(formatDate(alarmTime,"d/m/y") + " ");
   Serial.print(formatTime(alarmTime,"h:m:s"));
-  Serial.println();*/
+  Serial.println();
 
+}
+
+boolean verificaAlarm(){
+  if (intFlag){
+    intFlag = false; // Reseta flag
+    DS3231AlarmFlag flag = Rtc.LatchAlarmsTriggeredFlags(); //Variável para testar qual alarme disparou
+    if (flag & DS3231AlarmFlag_Alarm1)
+    {
+      digitalWrite(BUZZER, HIGH);
+      delay(1000);
+      digitalWrite(BUZZER, LOW);
+      return true;
+    }
+  }
+  return false;
 }
 
 void etapaMostura(EtapaQuente etapa[],int tam){
 
+  switch(_step){
+    case 1:
+      Serial.println("Etapa 1->");
+      
+       while(!verificaAlarm()){
+        Serial.print("Temperatura->");
+        Serial.println(getTemperature());
+        Serial.print("Alvo->");
+        Serial.println(etapa[0].tempMax);
+        Serial.print("Gordura->");
+        Serial.println(etapa[0].tempMin);
+        
+        controlResistence(getTemperature(),etapa[0].tempMin,etapa[0].tempMax, etapa[0].duracao);
+       }
+       _step++;
+       alarmeAtivo= false;
+    break;
+    
+    case 2:
+      Serial.println("Etapa 2->");
+      
+       while(!verificaAlarm()){
+        Serial.print("Temperatura->");
+        Serial.println(getTemperature());
+        Serial.print("Alvo->");
+        Serial.println(etapa[1].tempMax);
+        Serial.print("Gordura->");
+        Serial.println(etapa[1].tempMin);
+        
+        controlResistence(getTemperature(),etapa[1].tempMin,etapa[1].tempMax, etapa[1].duracao);
+       }
+       _step++;
+       alarmeAtivo= false;
+    break;
+  }
+ 
+  
+}
 
-
+void controlResistence(float tempSensor, float tempMin, float tempMax, byte duracao ){
+  if(tempSensor < tempMax && statusResistencia){
+    digitalWrite(RELE_RESISTENCIA, LOW); //Liga rele
+  }
+  else{
+    statusResistencia = false;
+      if(tempSensor < tempMin && !statusResistencia){
+        digitalWrite(RELE_RESISTENCIA, LOW); //Liga rele
+        statusResistencia = true;
+      }
+      else{
+          digitalWrite(RELE_RESISTENCIA, HIGH); //Desliga rele
+        
+        if(!alarmeAtivo){
+         setBuzzerTimer(duracao); 
+        }
+        
+      }
+   
+  }
 }
