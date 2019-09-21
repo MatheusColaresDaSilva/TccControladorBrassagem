@@ -1,37 +1,25 @@
-/*
- * Matheus Colares 
- * Trabalho de Conclusão de curso
- */
-
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h> 
 #include <RtcDS3231.h>
 
+struct EtapaQuente{
+  float tempMin;
+  float tempMax;
+  byte duracao;
+};
+
+struct Lupulos{
+
+  byte duracao;
+};
+
 struct Receita {
-  float etapMostura1[3]; //{TempMin,TempMax,Time}
-  float etapMostura2[3]; //{TempMin,TempMax,Time}
-  float etapMostura3[3]; //{TempMin,TempMax,Time}
-  float etapMostura4[3]; //{TempMin,TempMax,Time}
-  float etapMostura5[3]; //{TempMin,TempMax,Time}
-  float etapMostura6[3]; //{TempMin,TempMax,Time}
-  float etapMostura7[3]; //{TempMin,TempMax,Time}
-  float etapMostura8[3]; //{TempMin,TempMax,Time}
-  float etapMostura9[3]; //{TempMin,TempMax,Time}
-  float etapMostura10[3]; //{TempMin,TempMax,Time}
 
-  byte etapaFervura[2]; //{Temp,Time}
-
-  byte lupulo1[1]; //{Time}
-  byte lupulo2[1]; //{Time}
-  byte lupulo3[1]; //{Time}
-  byte lupulo4[1]; //{Time}
-  byte lupulo5[1]; //{Time}
-  byte lupulo6[1]; //{Time}
-  byte lupulo7[1]; //{Time}
-  byte lupulo8[1]; //{Time}
-  byte lupulo9[1]; //{Time}
-  byte lupulo10[1]; //{Time}
+  EtapaQuente mostura[10];
+  EtapaQuente fervura[1];
+  
+  Lupulos lupulo[10]; //{Time}
   
 };
 
@@ -58,9 +46,11 @@ boolean a=true;
 boolean b=false;
 float variacaoMinima;
 
+
 void setup() { 
 
   Serial.begin(9600);
+  addVariacaoMinima(0.5);
   
 
   iniciaSensorTemp();
@@ -78,27 +68,28 @@ void loop() {
 
   Serial.print("Temperatura->");
   Serial.println(getTemperature());
-  
-  addVariacaoMinima(0.5);
-  
+    
   struct Receita receita[10];
  
-  addEtapaMostura(receita[0].etapMostura1,68,60);
-  addEtapaMostura(receita[0].etapMostura2,75,10);
-  addEtapaFervura(receita[0].etapaFervura,96,60);
-  addLupulo(receita[0].lupulo1,10);
-  addLupulo(receita[0].lupulo2,20);
+  addEtapaMostura(receita[0].mostura,1,68,60);
+  addEtapaMostura(receita[0].mostura,2,75,10);
+  addEtapaFervura(receita[0].fervura,96,60);
+  addLupulo(receita[0].lupulo,1,10);
+  addLupulo(receita[0].lupulo,2,20);
+
+ //Serial.println("Dados Receita:");
+ //Serial.print("Etapa1:");Serial.print(receita[0].mostura[0].tempMin);Serial.print(",");Serial.print(receita[0].mostura[0].tempMax);Serial.print(",");Serial.println(receita[0].mostura[0].duracao);
   
-  addEtapaMostura(receita[1].etapMostura1,65,60);
-  addEtapaMostura(receita[1].etapMostura2,75,10);
-  addEtapaFervura(receita[1].etapaFervura,96,60);
-  addLupulo(receita[1].lupulo1,10);
-  addLupulo(receita[1].lupulo2,20);
+ /*addEtapaMostura(receita[1].mostura,1,65,60);
+ addEtapaMostura(receita[1].mostura,2,75,10);
+ addEtapaFervura(receita[1].fervura,96,60);
+ addLupulo(receita[1].lupulo,1,10);
+ addLupulo(receita[1].lupulo,2,20);*/
 
   if(a){
     a=false;
     b=true;
-    setBuzzerTimer(receita[0].lupulo1);  
+    setBuzzerTimer(receita[0].lupulo[0].duracao);  
   }
   
 
@@ -117,7 +108,7 @@ void loop() {
 
       if(b){
         b=false;
-         setBuzzerTimer(receita[0].lupulo2);
+         setBuzzerTimer(receita[0].lupulo[1].duracao);
       }
       digitalWrite(BUZZER, HIGH);
       delay(1000);
@@ -126,28 +117,28 @@ void loop() {
     }
   }
   
-  int length = sizeof(receita[0].etapMostura1)/sizeof(float);
-  etapaMostura(receita[0].etapMostura1,sizeof(receita[0].etapMostura1)/sizeof(float));
+ etapaMostura(receita[0].mostura,sizeof(receita[0].mostura)/sizeof(EtapaQuente));
 }
 
-void addEtapaMostura(float etapa[], float tempMax, float tempo){
-	
-  etapa[0] = tempMax - variacaoMinima;
-  etapa[1] = tempMax;
-  etapa[2] = tempo;
+void addEtapaMostura(EtapaQuente etapa[],int posicao, float tempMax, byte tempo){
   
-}
-
-void addEtapaFervura(byte etapa[], byte temp, byte tempo){
-  
-  etapa[0] = temp;
-  etapa[1] = tempo;
+  etapa[posicao-1].tempMin = tempMax - variacaoMinima;
+  etapa[posicao-1].tempMax = tempMax;
+  etapa[posicao-1].duracao = tempo;
   
 }
 
-void addLupulo(byte hop[], byte tempo){
+void addEtapaFervura(EtapaQuente etapa[], float tempMax, float tempo){
   
-  hop[0] = tempo;
+  etapa[0].tempMin = tempMax;
+  etapa[0].tempMax = tempMax;
+  etapa[0].duracao = tempo;
+  
+}
+
+void addLupulo(Lupulos hop[],int posicao, byte tempo){
+  
+  hop[posicao-1].duracao = tempo;
      
 }
 
@@ -224,10 +215,10 @@ void iniciarRtcDs3231(){
   Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeAlarmOne); //Habilta 2 alarmes
 }
 
-void setBuzzerTimer(byte valor[]){
+void setBuzzerTimer(byte valor){
 
  RtcDateTime now = Rtc.GetDateTime();
- RtcDateTime alarmTime = now + valor[0];
+ RtcDateTime alarmTime = now + valor;
 
   DS3231AlarmOne alarm(
     alarmTime.Day(),
@@ -240,11 +231,12 @@ void setBuzzerTimer(byte valor[]){
   // Efetiva os alarmes
   Rtc.LatchAlarmsTriggeredFlags();
 
-  /*Serial.print("Hora do agora ");
+  /*
+  Serial.print("Hora do agora ");
   Serial.print(formatDate(now,"d/m/y") + " ");
   Serial.print(formatTime(now,"h:m:s"));
   Serial.print(" + ");
-  Serial.print(valor[0]);
+  Serial.print(valor);
   Serial.print("seg");
   Serial.println();
   Serial.print("Hora do alarme ");
@@ -255,11 +247,8 @@ void setBuzzerTimer(byte valor[]){
 
 }
 
-void etapaMostura(float etapa[], byte sizeOf){
+void etapaMostura(EtapaQuente etapa[],int tam){
 
-  for(int i = 0; i < sizeOf ;i++){
 
-    Serial.print("nois: ->");
-    Serial.println(etapa[i]);
-  }
+
 }
