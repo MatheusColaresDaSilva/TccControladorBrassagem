@@ -47,8 +47,6 @@ void iniciarRtcDs3231(){
   Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeAlarmOne); //Habilta 2 alarmes
 }
 
-
-
 void mostrarHora(){
   RtcDateTime now = getHora();
   Serial.print(formatDate(now,"d/m/y") + " ");

@@ -46,7 +46,7 @@ RtcDateTime compiled;
 RtcDateTime now;
 
 volatile bool intFlag = false; // Variável que indica se hounve interrupção
-//volatile bool intFlagZero = false; // Variável que indica se hounve interrupção
+volatile bool intFlagZero = false; // Variável que indica se hounve interrupção
 float variacaoMinima;
 
 boolean alarmeAtivo= false;
@@ -156,12 +156,11 @@ void Menu(){
 
 void brassagem(){
   if(_mostura){
-     if(_step <= 10){
+    while(_step <= 10){
           etapaMostura(receita[0].mostura,sizeof(receita[0].mostura)/sizeof(EtapaQuente)); 
       }
-      else{
-       Serial.println("Brassagem Finalizada");
-      }
+      
+    Serial.println("Brassagem Finalizada");
   }
 
   if(_fervura){
@@ -176,7 +175,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
     while(!verificaAlarm()){
-          teste(etapa,_step);
+          mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -186,7 +185,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
        while(!verificaAlarm()){
-           teste(etapa,_step);
+           mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -196,7 +195,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
        while(!verificaAlarm()){
-           teste(etapa,_step);
+           mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -206,7 +205,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
        while(!verificaAlarm()){
-           teste(etapa,_step);
+           mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -216,7 +215,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
        while(!verificaAlarm()){
-           teste(etapa,_step);
+           mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -226,7 +225,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
        while(!verificaAlarm()){
-           teste(etapa,_step);
+           mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -236,7 +235,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
        while(!verificaAlarm()){
-           teste(etapa,_step);
+           mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -246,7 +245,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
        while(!verificaAlarm()){
-           teste(etapa,_step);
+           mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -256,7 +255,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
        while(!verificaAlarm()){
-           teste(etapa,_step);
+           mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -266,7 +265,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
        while(!verificaAlarm()){
-           teste(etapa,_step);
+           mash(etapa,_step);
        }
        _step++;
        alarmeAtivo= false;
@@ -276,7 +275,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
   
 }
 
-void teste(EtapaQuente etapa[],int i){
+void mash(EtapaQuente etapa[],int i){
         mostrarTemperatura();
         Serial.print("Alvo->");
         Serial.println(etapa[i-1].tempMax);

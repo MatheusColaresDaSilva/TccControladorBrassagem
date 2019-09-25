@@ -28,17 +28,14 @@ void setBuzzerTimer(byte valor){
   Serial.print(formatDate(alarmTime,"d/m/y") + " ");
   Serial.print(formatTime(alarmTime,"h:m:s"));
   Serial.println();
-  //Serial.println("uehuehueheuheuheuehuehuh");
   
-  /*if(now == alarmTime){
-    Serial.println("entrei aq 0");
+  if(now == alarmTime){
     intFlagZero = true;
-  }*/
+  }
 }
 
 boolean verificaAlarm(){
   if (intFlag){
-    //Serial.println("entrei aq 1");
     intFlag = false; // Reseta flag
     DS3231AlarmFlag flag = Rtc.LatchAlarmsTriggeredFlags(); //Variável para testar qual alarme disparou
     if (flag & DS3231AlarmFlag_Alarm1)
@@ -48,15 +45,10 @@ boolean verificaAlarm(){
       digitalWrite(BUZZER, LOW);
       return true;
     }
+    if(intFlagZero){
+      intFlagZero = false;
+      return true;
+    }
   }
   return false;
 }
-
-/*boolean verificarAlarmZero(){
-  if(intFlagZero){
-    Serial.println("entrei aq tbm 2");
-    intFlagZero = false;
-   return true; 
-  }
-  return false;
-}*/
