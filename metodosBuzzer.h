@@ -15,7 +15,10 @@ void setBuzzerTimer(byte valor){
   Rtc.LatchAlarmsTriggeredFlags();
   alarmeAtivo = true;
 
-  
+  if(now == alarmTime){
+    intFlagZero = true;
+  }
+  else{
   Serial.print("Hora do agora ");
   Serial.print(formatDate(now,"d/m/y") + " ");
   Serial.print(formatTime(now,"h:m:s"));
@@ -27,11 +30,11 @@ void setBuzzerTimer(byte valor){
   Serial.print("--> ");
   Serial.print(formatDate(alarmTime,"d/m/y") + " ");
   Serial.print(formatTime(alarmTime,"h:m:s"));
-  Serial.println();
-  
-  if(now == alarmTime){
-    intFlagZero = true;
+  Serial.println(); 
   }
+  
+  
+
 }
 
 boolean verificaAlarm(){
