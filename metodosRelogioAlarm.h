@@ -44,7 +44,8 @@ void iniciarRtcDs3231(){
     Rtc.SetDateTime(compiled);
   }
   Rtc.Enable32kHzPin(false);
-  Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeAlarmOne); //Habilta 2 alarmes
+  Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeAlarmBoth); //Habilta 2 alarmes
+  //Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeAlarmOne); //Habilta 2 alarmes
 }
 
 void mostrarHora(){

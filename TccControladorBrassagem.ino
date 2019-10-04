@@ -12,7 +12,7 @@ struct EtapaQuente{
 };
 
 struct Lupulos{
-  byte duracao = 0;
+  byte duracao = 255;
 };
 
 struct Receita {
@@ -37,6 +37,10 @@ struct Receita receita[10];
 
 //Botoes
 #define BTN_CONFIRMA 13
+#define BTN_CANCELA 12
+#define BTN_SOBE 11
+#define BTN_DESCE 10
+
 
 // Define uma instancia do oneWire para comunicacao com o sensor
 OneWire oneWire(ONE_WIRE_BUS);
@@ -47,17 +51,19 @@ DeviceAddress sensorTemperature;
 RtcDS3231<TwoWire> Rtc(Wire);
 RtcDateTime compiled;
 RtcDateTime now;
+RtcDateTime _inicioFervura;
+
 
 volatile bool intFlag = false; // Variável que indica se hounve interrupção
 volatile bool intFlagZero = false; // Variável que indica se hounve interrupção
 float variacaoMinima;
-
 boolean alarmeAtivo= false;
+boolean alarmeAtivoHop= false;
 boolean statusResistencia = true;
 boolean targetTemperatura = false;
 boolean _mostura = false;
 boolean _fervura = false;
-
+int _lupuloVez = 0;
 int _step = 0;
 
 void interrompeu() // Rotina chamada quando houver uma interrupção
@@ -94,10 +100,10 @@ void loop() {
   
  
   addEtapaMostura(receita[0].mostura,1,30,10,variacaoMinima );
-  addEtapaMostura(receita[0].mostura,2,32,10,variacaoMinima);
-  addEtapaFervura(receita[0].fervura,34,60);
-  addLupulo(receita[0].lupulo,1,10);
-  addLupulo(receita[0].lupulo,2,20);
+  //addEtapaMostura(receita[0].mostura,2,32,10,variacaoMinima);
+  addEtapaFervura(receita[0].fervura,32,120);
+  addLupulo(receita[0].lupulo,1,60);
+  addLupulo(receita[0].lupulo,2,0);
   mostrarTemperatura();
   mostrarHora();
   Menu();
@@ -157,10 +163,34 @@ void brassagem(){
 
   if(_fervura){
 
-    while(_step <= 10){
-          etapaFervura(receita[0].fervura,receita[0].lupulo,sizeof(receita[0].lupulo)/sizeof(Lupulos)); 
+    while(_step <= 0){
+       etapaFervura(receita[0].fervura,receita[0].lupulo,sizeof(receita[0].lupulo)/sizeof(Lupulos)); 
     }
   }
+
+  Serial.println("|****************************|");
+  Serial.println("|**|BRASSAGEM FINALIZADA |**|");
+  Serial.println("|****************************|");
+  Serial.println("");
+  while(!Serial.available()){digitalWrite(BUZZER, HIGH);digitalWrite(BUZZER, LOW
+  );}
+
+  while(Serial.available() > 0) {
+    char t = Serial.read();
+  }
+
+  intFlag = false; // Variável que indica se hounve interrupção
+  intFlagZero = false; // Variável que indica se hounve interrupção
+  variacaoMinima;
+  alarmeAtivo= false;
+  alarmeAtivoHop= false;
+  statusResistencia = true;
+  targetTemperatura = false;
+  _mostura = false;
+  _fervura = false;
+  _lupuloVez = 0;
+  _step = 0;
+  
 }
 
 void etapaFervura(EtapaQuente etapa[],Lupulos lupulo[], int tam){
@@ -168,7 +198,6 @@ void etapaFervura(EtapaQuente etapa[],Lupulos lupulo[], int tam){
     switch(_step){
     
      case 0:
-      Serial.println("Etapa Pré-Fervura");
 
        while(!verificaAlarm()){
           mostrarTemperatura();
@@ -177,8 +206,16 @@ void etapaFervura(EtapaQuente etapa[],Lupulos lupulo[], int tam){
           Serial.print("Gordura->");
           Serial.println(etapa[_step].tempMin);
           controlResistenceFervura(getTemperature(),etapa[_step].tempMin,etapa[_step].tempMax, etapa[_step].duracao);
+
+          if(alarmeAtivo){
+            if(!alarmeAtivoHop){
+              if(lupulo[_lupuloVez].duracao != 255){
+                setBuzzerTimerHop(etapa[_step].duracao, lupulo[_lupuloVez].duracao,_inicioFervura); 
+              }  
+            }            
+          }
        }
-       _step = 11;
+       _step = 1;
       
     break;
     
@@ -357,17 +394,10 @@ void controlResistenceTempInicial(float tempSensor, float tempMin, float tempMax
       else{
           digitalWrite(RELE_RESISTENCIA, HIGH); //Desliga rele
         
-        while(!digitalRead(BTN_CONFIRMA)){
-          Serial.println("Adicione os Maltes");
-      
-          tone(BUZZER,1500);
-          delay(1000);
-          noTone(BUZZER);
-          delay(1000);
-         }
+          adicionarMaltesMostura();
 
-        targetTemperatura =  true;
-        setBuzzerTimer(duracao);
+          targetTemperatura =  true;
+          setBuzzerTimer(duracao);
       }
   }
 }
@@ -401,4 +431,30 @@ void mash(EtapaQuente etapa[],int i){
         Serial.println(etapa[i-1].tempMin);
         
         controlResistence(getTemperature(),etapa[i-1].tempMin,etapa[i-1].tempMax, etapa[i-1].duracao);   
+}
+
+void adicionarMaltesMostura(){
+
+     while(!digitalRead(BTN_CONFIRMA)){
+      Serial.println("Adicione os Maltes");
+  
+      tone(BUZZER,1500);
+      delay(1000);
+      noTone(BUZZER);
+      delay(1000);
+     }
+}
+
+void adicionarLupuloFervura(byte posicao){
+
+    while(!digitalRead(BTN_CONFIRMA)){
+        Serial.print("ADICIONE LUPULO MINUTO->");
+        Serial.println(posicao);
+    
+        tone(BUZZER,1500);
+        delay(1000);
+        noTone(BUZZER);
+        delay(1000);
+      }
+      _lupuloVez++;
 }
