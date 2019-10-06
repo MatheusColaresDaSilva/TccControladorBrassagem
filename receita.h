@@ -2,7 +2,7 @@ void addVariacaoMinima(float valor){
   variacaoMinima = valor;
 }
 
-void addEtapaMostura(EtapaQuente etapa[],int posicao, float tempMax, byte tempo, float variacaoMin){
+void addEtapaMostura(EtapaQuente etapa[],int posicao, float tempMax, int tempo, float variacaoMin){
   
   etapa[posicao-1].tempMin = tempMax - variacaoMin;
   etapa[posicao-1].tempMax = tempMax;
@@ -10,7 +10,7 @@ void addEtapaMostura(EtapaQuente etapa[],int posicao, float tempMax, byte tempo,
   
 }
 
-void addEtapaFervura(EtapaQuente etapa[], float tempMax, float tempo){
+void addEtapaFervura(EtapaQuente etapa[], float tempMax, int tempo){
   
   etapa[0].tempMin = tempMax;
   etapa[0].tempMax = tempMax;
@@ -18,7 +18,7 @@ void addEtapaFervura(EtapaQuente etapa[], float tempMax, float tempo){
   
 }
 
-void addLupulo(Lupulos hop[],int posicao, byte tempo){
+void addLupulo(Lupulos hop[],int posicao, int tempo){
   
   hop[posicao-1].duracao = tempo;
      

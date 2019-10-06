@@ -1,4 +1,26 @@
-void setBuzzerTimer(byte valor){
+void tocarBuzzer(){
+    
+    unsigned long _millisAtual = millis();
+  
+     if (_millisAtual - _millisAnterior > _intervaloBuzzer){
+        if (_tocarBuzzer == 1){
+            digitalWrite(BUZZER, HIGH);
+            _tocarBuzzer = 0;
+         }
+        else{
+            digitalWrite(BUZZER, LOW);
+            _tocarBuzzer = 1;
+         }
+        _millisAnterior = _millisAtual;
+      } 
+    
+    //digitalWrite(BUZZER, LOW);
+}
+
+void desligaBuzzer(){
+  digitalWrite(BUZZER, LOW);
+}
+void setBuzzerTimer(int valor){
 
  RtcDateTime now = getHora();
  _inicioFervura = getHora();
@@ -36,12 +58,16 @@ void setBuzzerTimer(byte valor){
   
 }
 
-void setBuzzerTimerHop(byte tempoFervura, byte tempoLupulo, RtcDateTime inicioFervura){
+void setBuzzerTimerHop(int tempoFervura, int tempoLupulo, RtcDateTime inicioFervura){
 
- byte valor = tempoFervura - tempoLupulo;
+ int valor = tempoFervura - tempoLupulo;
 
  if(valor == 0){
   adicionarLupuloFervura(_lupuloVez);
+  return;
+ }
+ if(tempoLupulo==0){
+  _lupuloFlameOut = true;
   return;
  }
  
@@ -76,6 +102,7 @@ boolean verificaAlarm(){
       digitalWrite(BUZZER, HIGH);
       delay(1000);
       digitalWrite(BUZZER, LOW);
+      //tocarBuzzer();
       return true;
     }
 
