@@ -2,6 +2,7 @@
 #include <DallasTemperature.h>
 #include <Wire.h> 
 #include <RtcDS3231.h>
+#include <LiquidCrystal.h>
 
 struct EtapaQuente{
   float tempMin = 0;
@@ -33,17 +34,16 @@ struct Receita receita[10];
 #define INT_NUMBER_INTERRUPTION_VAZAO 0 // INTERRUPÇÃO DO SENSOR DE VAZAO DE FLUIDO
 #define BUZZER 9
 //Porta do pino do rele resistencia
-#define RELE_RESISTENCIA 8
+#define RELE_RESISTENCIA 29
 
 //Porta do pino do rele valvula
-#define RELE_VALVULA 7
+#define RELE_VALVULA 28
 
 //Botoes
 #define BTN_CONFIRMA 13
-#define BTN_CANCELA 12
-#define BTN_SOBE 11
-#define BTN_DESCE 10
-
+#define BTN_SOBE 12
+#define BTN_DESCE 11
+#define BTN_CANCELA 10
 
 // Define uma instancia do oneWire para comunicacao com o sensor
 OneWire oneWire(ONE_WIRE_BUS);
@@ -55,6 +55,9 @@ RtcDS3231<TwoWire> Rtc(Wire);
 RtcDateTime compiled;
 RtcDateTime now;
 RtcDateTime _inicioFervura;
+
+//lcd
+LiquidCrystal lcd(3, 4, 5, 6, 7, 8);
 
 //Variaveis Millis
 unsigned long _millisAnterior = 0;
@@ -100,10 +103,14 @@ void interrompeu() // Rotina chamada quando houver uma interrupção
 #include "metodosSensorTemp.h"
 #include "metodosRelogioAlarm.h"
 #include "metodosBuzzer.h"
+#include "metodosLcd.h"
 
 void setup() { 
 
   Serial.begin(9600);
+
+  lcd.begin(16, 2);
+  
   addVariacaoMinima(0.5);
   
 
@@ -130,52 +137,62 @@ void setup() {
   pinMode(BTN_SOBE,INPUT_PULLUP);
   pinMode(BTN_DESCE,INPUT_PULLUP);
 
+  lcd.createChar(0, menuCursorRight);
+  lcd.createChar(1, menuCursorLeft);
+  lcd.createChar(2, relogioIcon);
+  lcd.createChar(3, termometroIcon);
+  lcd.createChar(4, grausCelsiosIcon);
+  lcd.createChar(5, lupuloIcon);
+  
+
 }
 
 void loop() {
   
  
-  addEtapaMostura(receita[0].mostura,1,30,10,variacaoMinima );
-  addEtapaMostura(receita[0].mostura,2,32,10,variacaoMinima);
-  addEtapaFervura(receita[0].fervura,33,120);
-  addLupulo(receita[0].lupulo,1,120);
-  addLupulo(receita[0].lupulo,2,60);
-  addLupulo(receita[0].lupulo,3,0);
-  mostrarTemperatura();
-  mostrarHora();
-  Menu();
-
+  //addEtapaMostura(receita[0].mostura,1,30,10,variacaoMinima );
+  //addEtapaMostura(receita[0].mostura,2,32,10,variacaoMinima);
+  //addEtapaFervura(receita[0].fervura,33,120);
+  //addLupulo(receita[0].lupulo,1,120);
+  //addLupulo(receita[0].lupulo,2,60);
+  //addLupulo(receita[0].lupulo,3,0);
+  //mostrarTemperatura();
+  //mostrarHora();
+  //Menu();
+  mexerMenu();
+    
 }
 
 void Menu(){
 
-  Serial.println("|****************************|");
-  Serial.println("|**|Ardnoid Configuration |**|");
-  Serial.println("|**|        Menu          |**|");
-  Serial.println("|****************************|");
-  Serial.println("");
-  Serial.println("Selecione uma opção abaixo:");
-  Serial.println("1 Iniciar Mostura");
   
-  while(!Serial.available()){}
-  int i = Serial.parseInt();
-
-  while(Serial.available() > 0) {
-    char t = Serial.read();
-  }
-  switch(i){
-
-  case 1:
-    _mostura = true;
-    adicionarAgua();
-    brassagem();
-  case 2:
-    break;
-  case 3:
-    break;
-  default:
-  break;
-    } 
+//  Serial.println("|****************************|");
+//  Serial.println("|**|Ardnoid Configuration |**|");
+//  Serial.println("|**|        Menu          |**|");
+//  Serial.println("|****************************|");
+//  Serial.println("");
+//  Serial.println("Selecione uma opção abaixo:");
+//  Serial.println("1 Iniciar Mostura");
+//  
+//  while(!Serial.available()){}
+//  int i = Serial.parseInt();
+//
+//  while(Serial.available() > 0) {
+//    char t = Serial.read();
+//  }
+//  switch(i){
+//
+//  case 1:
+//    _mostura = true;
+//    adicionarAgua();
+//    brassagem();
+//  case 2:
+//    break;
+//  case 3:
+//    break;
+//  default:
+//  break;
+//    } 
  }
 
 void brassagem(){
