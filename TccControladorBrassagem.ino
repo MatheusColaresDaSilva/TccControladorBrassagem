@@ -3,6 +3,8 @@
 #include <Wire.h> 
 #include <RtcDS3231.h>
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
+#include <Arduino.h>  // for type definitions
 
 struct EtapaQuente{
   float tempMin = 0;
@@ -103,7 +105,9 @@ void interrompeu() // Rotina chamada quando houver uma interrupção
 #include "metodosSensorTemp.h"
 #include "metodosRelogioAlarm.h"
 #include "metodosBuzzer.h"
+#include "metodosEEPROM.h"
 #include "metodosLcd.h"
+
 
 void setup() { 
 
@@ -143,6 +147,7 @@ void setup() {
   lcd.createChar(3, termometroIcon);
   lcd.createChar(4, grausCelsiosIcon);
   lcd.createChar(5, lupuloIcon);
+  lcd.createChar(6, targetIcon);
   
 
 }
@@ -292,10 +297,17 @@ void etapaMostura(EtapaQuente etapa[],int tam){
   switch(_step){
 
     case 0:
+
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Pre-Aquecimento");
       Serial.print("Etapa Pré-Aquecimento");
 
        while(!targetTemperatura){
+          lcd.setCursor(0,1);
           mostrarTemperatura();
+          lcd.setCursor(9,1);
+          mostrarTempAlvo(etapa[_step].tempMax);
           Serial.print("Alvo->");
           Serial.println(etapa[_step].tempMax);
           Serial.print("Gordura->");
@@ -499,6 +511,7 @@ void mash(EtapaQuente etapa[],int i){
 void adicionarMaltesMostura(){
 
      while(!digitalRead(BTN_CONFIRMA)){
+      
       Serial.println("Adicione os Maltes");
 
       tocarBuzzer();
@@ -530,8 +543,15 @@ void adicionarLupuloFervura(int posicao){
 void adicionarAgua(){
 
   float volumeAgua = 0;
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("ADD VOL AGUA");
+  delay(2000);
   
   Serial.println("ADICIONE QTD DE AGUA->");
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("ADD VOL AGUA");
   while(!digitalRead(BTN_CONFIRMA)){
         
       if(digitalRead(BTN_SOBE)){
@@ -543,6 +563,10 @@ void adicionarAgua(){
           volumeAgua=0;
         }
       }
+     
+     lcd.setCursor(0,1);
+     lcd.print("VOLUME->");   
+     lcd.print(volumeAgua);
      Serial.print("VOLUME->");   
      Serial.println(volumeAgua);
      delay(100);
@@ -551,9 +575,9 @@ void adicionarAgua(){
    if(volumeAgua==0){
     return;
    }
+   
    digitalWrite(RELE_VALVULA, LOW);
-
-  
+     
    while(_litros <= volumeAgua && !digitalRead(BTN_CANCELA)){
     _contaPulso = 0;   //Zera a variável para contar os giros por segundos
 
@@ -578,6 +602,13 @@ void adicionarAgua(){
      _vazao = _contaPulso / 7.5; //Converte para L/min
      _miliLitros = _vazao / 60;
     _litros = _litros + _miliLitros;
+
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Enchendo:");
+    lcd.setCursor(2,1);
+    lcd.print(_litros);
+    lcd.print("L");
     Serial.print(_litros);
     Serial.println("L ");
     Serial.println(digitalRead(BTN_CANCELA));
