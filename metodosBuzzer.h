@@ -20,6 +20,7 @@ void tocarBuzzer(){
 void desligaBuzzer(){
   digitalWrite(BUZZER, LOW);
 }
+
 void setBuzzerTimer(int valor){
 
  RtcDateTime now = getHora();
@@ -37,7 +38,8 @@ void setBuzzerTimer(int valor){
   // Efetiva os alarmes
   Rtc.LatchAlarmsTriggeredFlags();
   alarmeAtivo = true;
-
+  _millisHorarioAlarm = millis() + ((unsigned long)valor * 1000);
+    
   if(now == alarmTime){
     intFlagZero = true;
   }
@@ -54,8 +56,7 @@ void setBuzzerTimer(int valor){
   Serial.print(formatDate(alarmTime,"d/m/y") + " ");
   Serial.print(formatTime(alarmTime,"h:m:s"));
   Serial.println(); 
-  }
-  
+  } 
 }
 
 void setBuzzerTimerHop(int tempoFervura, int tempoLupulo, RtcDateTime inicioFervura){

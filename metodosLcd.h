@@ -75,6 +75,17 @@ byte targetIcon[8] = {
   0B01100
 };
 
+byte setaPraBaixoIcon[8] = {
+  0B01110,
+  0B01110,
+  0B01110,
+  0B01110,
+  0B01110,
+  0B11111,
+  0B01110,
+  0B00100
+};
+
 String _menuItems[] = {"Criar Receita", "Iniciar Brassagem"};
 String _menuMostura[] = {"Mostura 1", "Mostura 2", "Mostura 3",
                          "Mostura 4", "Mostura 5", "Mostura 6",
@@ -479,7 +490,7 @@ void menuFervura(){
 void mexerMenu(){
 
   lcd.clear();
-  lcd.setCursor(1, 0);
+  lcd.setCursor(0, 0);
   lcd.print(_menuItems[_menuAtual]);
   lcd.setCursor(0, 1);
   lcd.write(byte(1));
@@ -521,4 +532,23 @@ void mexerMenu(){
   }
    delay(150);
 
+}
+
+void imprimirEtapa(){
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Etapa ");
+      lcd.print(_step);
+}
+
+void imprimiTempoRestante(){
+    
+     lcd.setCursor(9,0);
+     lcd.print("      ");
+     lcd.setCursor(9,0);     
+     lcd.write(byte(2));
+     lcd.write(byte(7));
+     lcd.print(" ");
+     lcd.print(((_millisHorarioAlarm - millis())/1000/60) % 60); // converter millis para minutos
+     lcd.print("'");
 }

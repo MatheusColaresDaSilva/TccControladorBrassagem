@@ -78,9 +78,11 @@ boolean targetTemperatura = false;
 boolean _lupuloFlameOut = false;
 boolean _mostura = false;
 boolean _fervura = false;
+boolean _brassagemFinalizada = false;
 int _lupuloVez = 0;
 int _step = 0;
 
+unsigned long _millisHorarioAlarm;
 //Variaveis do controle de água
 float _vazao = 0 ; //Variável para armazenar o valor em L/min
 int _contaPulso; //Variável para a quantidade de pulsos
@@ -148,6 +150,7 @@ void setup() {
   lcd.createChar(4, grausCelsiosIcon);
   lcd.createChar(5, lupuloIcon);
   lcd.createChar(6, targetIcon);
+  lcd.createChar(7, setaPraBaixoIcon);
   
 
 }
@@ -205,9 +208,16 @@ void brassagem(){
     while(_step <= 10){
           etapaMostura(receita[0].mostura,sizeof(receita[0].mostura)/sizeof(EtapaQuente)); 
       }
-    
+      
+    lcd.clear();
+    _millisHorarioAlarm =0;
     while(!digitalRead(BTN_CONFIRMA)){
+        
+        lcd.setCursor(0,0);
+        lcd.print("Fim da Mostura");
         Serial.println("FIM DE MOSTURA");
+        lcd.setCursor(0,1);
+        lcd.print("Retire os Maltes");
         Serial.println("RETIRE OS MALTES");
     
         //tone(BUZZER,1500);
@@ -223,6 +233,7 @@ void brassagem(){
       _step = 0;
   }
 
+  lcd.clear();
   if(_fervura){
 
     while(_step <= 0){
@@ -234,16 +245,28 @@ void brassagem(){
   if(_lupuloFlameOut){
     adicionarLupuloFervura(_lupuloVez);
     _lupuloFlameOut = false;
+    delay(2000);
   }
+
+  
+  lcd.setCursor(0,0);
   Serial.println("|****************************|");
   Serial.println("|**|BRASSAGEM FINALIZADA |**|");
   Serial.println("|****************************|");
   Serial.println("");
+  lcd.clear();
+  
   while(!digitalRead(BTN_CONFIRMA)){
   //digitalWrite(BUZZER, HIGH);digitalWrite(BUZZER, LOW);
  
+  lcd.setCursor(0,0);
+  lcd.print("BRASSAGEM FINALIZADA");
+  lcd.setCursor(0,1);
+  lcd.print("Press Confirmar");
+  
   tocarBuzzer();
   }
+  
   desligaBuzzer();
 
   intFlag = false; // Variável que indica se hounve interrupção
@@ -266,8 +289,20 @@ void etapaFervura(EtapaQuente etapa[],Lupulos lupulo[], int tam){
     switch(_step){
     
      case 0:
-
+           
        while(!verificaAlarm()){
+        lcd.setCursor(0,0);
+        lcd.print("Fervura");
+
+         if(alarmeAtivo){
+             imprimiTempoRestante();
+         }
+         
+        lcd.setCursor(0,1);
+        mostrarTemperatura();
+        lcd.setCursor(9,1);
+        mostrarTempAlvo(etapa[_step].tempMax);
+        
           mostrarTemperatura();
           Serial.print("Alvo->");
           Serial.println(etapa[_step].tempMax);
@@ -320,6 +355,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
     
     case 1:
+      imprimirEtapa();
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
 
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -331,6 +367,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
     
     case 2:
+      imprimirEtapa();
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -342,6 +379,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
 
     case 3:
+      imprimirEtapa();
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -353,6 +391,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
     
     case 4:
+      imprimirEtapa();
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -364,6 +403,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
     
     case 5:
+      imprimirEtapa();    
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -375,6 +415,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
     
     case 6:
+      imprimirEtapa();
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -386,6 +427,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
     
     case 7:
+      imprimirEtapa();
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
 
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -397,6 +439,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
     
     case 8:
+      imprimirEtapa();
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
 
      // controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -408,6 +451,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
     
     case 9:
+      imprimirEtapa();
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
      // controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -419,6 +463,7 @@ void etapaMostura(EtapaQuente etapa[],int tam){
     break;
     
     case 10:
+      imprimirEtapa();
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
 
      // controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
@@ -498,20 +543,34 @@ void controlResistenceFervura(float tempSensor, float tempMin, float tempMax, in
   }
 }
 
+
 void mash(EtapaQuente etapa[],int i){
+
+         if(alarmeAtivo){
+             imprimiTempoRestante();
+         }
+         
+        lcd.setCursor(0,1);
         mostrarTemperatura();
-        Serial.print("Alvo->");
-        Serial.println(etapa[i-1].tempMax);
-        Serial.print("Gordura->");
-        Serial.println(etapa[i-1].tempMin);
+        lcd.setCursor(9,1);
+        mostrarTempAlvo(etapa[_step-1].tempMax);
+          
+//        mostrarTemperatura();
+//        Serial.print("Alvo->");
+//        Serial.println(etapa[i-1].tempMax);
+//        Serial.print("Gordura->");
+//        Serial.println(etapa[i-1].tempMin);
         
         controlResistence(getTemperature(),etapa[i-1].tempMin,etapa[i-1].tempMax, etapa[i-1].duracao);   
 }
 
 void adicionarMaltesMostura(){
-
+     lcd.clear();
      while(!digitalRead(BTN_CONFIRMA)){
-      
+      lcd.setCursor(0,0);
+      lcd.print("Adicione os Maltes");
+      lcd.setCursor(0,1);
+      lcd.print("Press Confirmar");
       Serial.println("Adicione os Maltes");
 
       tocarBuzzer();
@@ -525,18 +584,23 @@ void adicionarMaltesMostura(){
 
 void adicionarLupuloFervura(int posicao){
 
+    lcd.clear();
     while(!digitalRead(BTN_CONFIRMA)){
+        
+        lcd.setCursor(0,0);
+        lcd.print("ADD LUPULO ");
+        lcd.print(posicao);
+        lcd.setCursor(0,1);
+        lcd.print("Press Confirmar");
         Serial.print("ADICIONE LUPULO MINUTO->");
         Serial.println(posicao);
 
        tocarBuzzer();
-        //tone(BUZZER,1500);
-        //delay(1000);
-        //noTone(BUZZER);
-        //delay(1000);
+
       }
       desligaBuzzer();
       _lupuloVez++;
+      lcd.clear();
 }
 
 

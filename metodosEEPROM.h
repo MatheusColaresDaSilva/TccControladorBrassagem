@@ -215,6 +215,7 @@ String nomeReceitaLer;
                _mostura = true;
                 adicionarAgua();
                 brassagem();
+                carregarReceitas = false;
           }
         
           
