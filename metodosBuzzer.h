@@ -1,3 +1,8 @@
+int minParaSeg(int valor){
+
+  return valor * 60;
+}
+
 void tocarBuzzer(){
     
     unsigned long _millisAtual = millis();
@@ -23,6 +28,7 @@ void desligaBuzzer(){
 
 void setBuzzerTimer(int valor){
 
+ valor = minParaSeg(valor);
  RtcDateTime now = getHora();
  _inicioFervura = getHora();
  RtcDateTime alarmTime = now + valor;
@@ -71,7 +77,8 @@ void setBuzzerTimerHop(int tempoFervura, int tempoLupulo, RtcDateTime inicioFerv
   _lupuloFlameOut = true;
   return;
  }
- 
+
+ valor = minParaSeg(valor);
  RtcDateTime alarmTime = inicioFervura + valor;
   
   DS3231AlarmTwo alarm2(
@@ -85,11 +92,11 @@ void setBuzzerTimerHop(int tempoFervura, int tempoLupulo, RtcDateTime inicioFerv
   Rtc.LatchAlarmsTriggeredFlags();
   alarmeAtivoHop = true;
 
-//  Serial.print("Hora do alarme Lupulo");
-//  Serial.print("--> ");
-//  Serial.print(formatDate(alarmTime,"d/m/y") + " ");
-//  Serial.print(formatTime(alarmTime,"h:m:s"));
-//  Serial.println(); 
+  Serial.print("Hora do alarme Lupulo");
+  Serial.print("--> ");
+  Serial.print(formatDate(alarmTime,"d/m/y") + " ");
+  Serial.print(formatTime(alarmTime,"h:m:s"));
+  Serial.println(); 
  
   
 }

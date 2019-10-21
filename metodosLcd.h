@@ -549,6 +549,6 @@ void imprimiTempoRestante(){
      lcd.write(byte(2));
      lcd.write(byte(7));
      lcd.print(" ");
-     lcd.print(((_millisHorarioAlarm - millis())/1000/60) % 60); // converter millis para minutos
+     lcd.print((((_millisHorarioAlarm - millis())/1000/60) % 60)+1); // converter millis para minutos
      lcd.print("'");
 }

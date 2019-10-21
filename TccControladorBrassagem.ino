@@ -31,7 +31,7 @@ struct Receita receita[10];
 
 // Porta do pino de sinal do RTCDS3231
 #define SQW_PIN 19 //PINO DE INTERRUPÇÃO RELOGIO 19
-#define VALVULA_FUIDO 2 //PINO DE INTERRUPÇÃO VAZAO FLUIDO 2
+#define VALVULA_FLUIDO 2 //PINO DE INTERRUPÇÃO VAZAO FLUIDO 2
 #define INT_NUMBER_INTERRUPTION 4 // INTERRUPÇÃO DO RELOGIO
 #define INT_NUMBER_INTERRUPTION_VAZAO 0 // INTERRUPÇÃO DO SENSOR DE VAZAO DE FLUIDO
 #define BUZZER 9
@@ -40,6 +40,10 @@ struct Receita receita[10];
 
 //Porta do pino do rele valvula
 #define RELE_VALVULA 28
+
+//Porta do pino do rele bomba
+#define RELE_BOMBA 30
+
 
 //Botoes
 #define BTN_CONFIRMA 13
@@ -63,6 +67,7 @@ LiquidCrystal lcd(3, 4, 5, 6, 7, 8);
 
 //Variaveis Millis
 unsigned long _millisAnterior = 0;
+unsigned long _millisAnteriorValvula = 0;
 unsigned long _intervaloBuzzer = 1000;
 unsigned int _tocarBuzzer = 1;
 unsigned long _intervaloValvula = 1000;
@@ -122,7 +127,7 @@ void setup() {
 
   iniciaSensorTemp();
   iniciarRtcDs3231();
-
+  pinMode(VALVULA_FLUIDO, INPUT_PULLUP);
   // Configura interrupção
   attachInterrupt(INT_NUMBER_INTERRUPTION, interrompeu, FALLING);
   attachInterrupt(INT_NUMBER_INTERRUPTION_VAZAO, incpulso, RISING); //Configura o pino 2(Interrupção 0) para trabalhar como interrupção
@@ -130,13 +135,15 @@ void setup() {
 
   // Pullup no pino de interrupção
   pinMode(SQW_PIN, INPUT_PULLUP);
-  pinMode(VALVULA_FUIDO, INPUT_PULLUP);
+  
  
   pinMode(BUZZER,OUTPUT);
   pinMode(RELE_RESISTENCIA,OUTPUT);
   pinMode(RELE_VALVULA,OUTPUT);
-  digitalWrite(RELE_RESISTENCIA, HIGH);
+  pinMode(RELE_BOMBA,OUTPUT);
+  digitalWrite(RELE_RESISTENCIA, LOW);
   digitalWrite(RELE_VALVULA, HIGH);
+  digitalWrite(RELE_BOMBA, HIGH);
 
   pinMode(BTN_CONFIRMA,INPUT_PULLUP);
   pinMode(BTN_CANCELA,INPUT_PULLUP);
@@ -208,7 +215,8 @@ void brassagem(){
     while(_step <= 10){
           etapaMostura(receita[0].mostura,sizeof(receita[0].mostura)/sizeof(EtapaQuente)); 
       }
-      
+
+    desligaBombaRecirculacao();   
     lcd.clear();
     _millisHorarioAlarm =0;
     while(!digitalRead(BTN_CONFIRMA)){
@@ -241,7 +249,7 @@ void brassagem(){
     }
   }
 
-  digitalWrite(RELE_RESISTENCIA, HIGH); //Desliga rele
+  digitalWrite(RELE_RESISTENCIA, LOW); //Desliga rele
   if(_lupuloFlameOut){
     adicionarLupuloFervura(_lupuloVez);
     _lupuloFlameOut = false;
@@ -338,7 +346,8 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       lcd.print("Pre-Aquecimento");
       Serial.print("Etapa Pré-Aquecimento");
 
-       while(!targetTemperatura){
+       while(!targetTemperatura && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA)) ){
+          ligaBombaRecirculacao();
           lcd.setCursor(0,1);
           mostrarTemperatura();
           lcd.setCursor(9,1);
@@ -349,9 +358,12 @@ void etapaMostura(EtapaQuente etapa[],int tam){
           Serial.println(etapa[_step].tempMin);
           controlResistenceTempInicial(getTemperature(),etapa[_step].tempMin,etapa[_step].tempMax, etapa[_step].duracao);
        }
+
+       lcd.clear();
+       desligaBombaRecirculacao();
        targetTemperatura = false;
        _step++;
-      
+       delay(2000);
     break;
     
     case 1:
@@ -359,11 +371,16 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
 
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
        }
+
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
     
     case 2:
@@ -371,11 +388,15 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
       }
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
 
     case 3:
@@ -383,11 +404,15 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
       }
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
     
     case 4:
@@ -395,11 +420,15 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
       }
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
     
     case 5:
@@ -407,11 +436,15 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
       }
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
     
     case 6:
@@ -419,11 +452,15 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
       }
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
     
     case 7:
@@ -431,11 +468,15 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
 
       //controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
       }
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
     
     case 8:
@@ -443,11 +484,15 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
 
      // controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
       }
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
     
     case 9:
@@ -455,11 +500,15 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
       
      // controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
       }
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
     
     case 10:
@@ -467,11 +516,15 @@ void etapaMostura(EtapaQuente etapa[],int tam){
       Serial.print("Etapa ");Serial.print(_step); Serial.println("->");
 
      // controlResistence(getTemperature(),etapa[_step-1].tempMin,etapa[_step-1].tempMax, etapa[_step-1].duracao);
-      while(!verificaAlarm()){
+      while(!verificaAlarm() && !(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA))){
+          ligaBombaRecirculacao();
           mash(etapa,_step);
       }
+      lcd.clear();
+      desligaBombaRecirculacao();
       _step++;
       alarmeAtivo= false;
+      delay(2000);
     break;
     
   }
@@ -482,16 +535,16 @@ void etapaMostura(EtapaQuente etapa[],int tam){
 
 void controlResistence(float tempSensor, float tempMin, float tempMax, int duracao ){
   if(tempSensor < tempMax && statusResistencia){
-    digitalWrite(RELE_RESISTENCIA, LOW); //Liga rele
+    digitalWrite(RELE_RESISTENCIA, HIGH); //Liga rele
   }
   else{
     statusResistencia = false;
       if(tempSensor < tempMin && !statusResistencia){
-        digitalWrite(RELE_RESISTENCIA, LOW); //Liga rele
+        digitalWrite(RELE_RESISTENCIA, HIGH); //Liga rele
         statusResistencia = true;
       }
       else{
-          digitalWrite(RELE_RESISTENCIA, HIGH); //Desliga rele
+          digitalWrite(RELE_RESISTENCIA, LOW); //Desliga rele
         
         if(!alarmeAtivo){
          setBuzzerTimer(duracao); 
@@ -503,16 +556,16 @@ void controlResistence(float tempSensor, float tempMin, float tempMax, int durac
 
 void controlResistenceTempInicial(float tempSensor, float tempMin, float tempMax, int duracao ){
   if(tempSensor < tempMax && statusResistencia){
-    digitalWrite(RELE_RESISTENCIA, LOW); //Liga rele
+    digitalWrite(RELE_RESISTENCIA, HIGH); //Liga rele
   }
   else{
     statusResistencia = false;
       if(tempSensor < tempMin && !statusResistencia){
-        digitalWrite(RELE_RESISTENCIA, LOW); //Liga rele
+        digitalWrite(RELE_RESISTENCIA, HIGH); //Liga rele
         statusResistencia = true;
       }
       else{
-          digitalWrite(RELE_RESISTENCIA, HIGH); //Desliga rele
+          digitalWrite(RELE_RESISTENCIA, LOW); //Desliga rele
         
           adicionarMaltesMostura();
 
@@ -524,16 +577,16 @@ void controlResistenceTempInicial(float tempSensor, float tempMin, float tempMax
 
 void controlResistenceFervura(float tempSensor, float tempMin, float tempMax, int duracao ){
   if(tempSensor < tempMax && statusResistencia){
-    digitalWrite(RELE_RESISTENCIA, LOW); //Liga rele
+    digitalWrite(RELE_RESISTENCIA, HIGH); //Liga rele
   }
   else{
     statusResistencia = false;
       if(tempSensor < tempMin && !statusResistencia){
-        digitalWrite(RELE_RESISTENCIA, LOW); //Liga rele
+        digitalWrite(RELE_RESISTENCIA, HIGH); //Liga rele
         statusResistencia = true;
       }
       else{
-          digitalWrite(RELE_RESISTENCIA, LOW); //Liga rele
+          digitalWrite(RELE_RESISTENCIA, HIGH); //Liga rele
         
         if(!alarmeAtivo){
          setBuzzerTimer(duracao); 
@@ -565,6 +618,7 @@ void mash(EtapaQuente etapa[],int i){
 }
 
 void adicionarMaltesMostura(){
+     desligaBombaRecirculacao(); 
      lcd.clear();
      while(!digitalRead(BTN_CONFIRMA)){
       lcd.setCursor(0,0);
@@ -603,6 +657,14 @@ void adicionarLupuloFervura(int posicao){
       lcd.clear();
 }
 
+void ligaBombaRecirculacao(){
+  digitalWrite(RELE_BOMBA, LOW); //Liga rele
+}
+
+
+void desligaBombaRecirculacao(){
+  digitalWrite(RELE_BOMBA, HIGH); //Desiga rele
+}
 
 void adicionarAgua(){
 
@@ -645,25 +707,29 @@ void adicionarAgua(){
    while(_litros <= volumeAgua && !digitalRead(BTN_CANCELA)){
     _contaPulso = 0;   //Zera a variável para contar os giros por segundos
 
-    unsigned long _millisAtual = millis();
-  
-    if (_millisAtual - _millisAnterior > _intervaloValvula){
-       if (_verificaInterrValvula == 1){
-           sei();
-           _verificaInterrValvula = 0;
-        }
-       else{
-           cli();
-           _verificaInterrValvula = 1;
-        }
-       _millisAnterior = _millisAtual;
-    } 
+//    unsigned long _millisAtualValvula = millis();
+//  
+//    if (_millisAtualValvula - _millisAnteriorValvula > _intervaloValvula){
+//              Serial.println("entrei");
+//
+//       if (_verificaInterrValvula == 1){
+//           sei();
+//        Serial.println("sei");
+//           _verificaInterrValvula = 0;
+//        }
+//       else{
+//           cli();
+//                   Serial.println("cli");
+//           _verificaInterrValvula = 1;
+//        }
+//       _millisAnteriorValvula = _millisAtualValvula;
+//    } 
       
-//    sei();      //Habilita interrupção
-//    delay (1000); //Aguarda 1 segundo
-//    cli();      //Desabilita interrupção
+    sei();      //Habilita interrupção
+    delay (1000); //Aguarda 1 segundoção
+    cli();      //Desabilita interrup
   
-     _vazao = _contaPulso / 7.5; //Converte para L/min
+     _vazao = _contaPulso / 6.8; //Converte para L/min
      _miliLitros = _vazao / 60;
     _litros = _litros + _miliLitros;
 
@@ -679,4 +745,6 @@ void adicionarAgua(){
    }
    
    digitalWrite(RELE_VALVULA, HIGH);
+   lcd.clear();
+   delay(2000);
 }
