@@ -204,6 +204,12 @@ String nomeReceitaLer;
             receita_pos = 10;
           }
         }
+       
+       else if(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA)){
+          carregarReceitas = false;
+          return NULL;
+        }
+        
         else if (digitalRead(BTN_CONFIRMA)) {
           if(val == 0){
               lcd.clear();
@@ -229,4 +235,170 @@ String nomeReceitaLer;
     }
    
   
+}
+
+void deletarReceita(){
+  delay(150);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Escolha Receita");
+  
+bool carregarReceitas = true;
+int receita_pos = 1;
+int pos = 100;
+int val;
+String nomeReceitaLer;
+  while (carregarReceitas) {
+    
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Receita ");
+       lcd.print(receita_pos);
+       nomeReceitaLer = read_String(retornaPosicaoNome(retornaPosicaoReceita(pos)));
+        EEPROM_readAnything(retornaPosicaoReceita(pos), receita[0]);
+        
+       lcd.setCursor(0, 1);
+       EEPROM_readAnything(pos, val);
+        if(val == 0){
+          //pos = 100;
+          lcd.print("VAZIO");
+        }
+        else { 
+        lcd.print(nomeReceitaLer);
+        }
+         
+        if (digitalRead(BTN_SOBE)) {
+          receita_pos++;
+          pos = pos+2;
+          if (pos > 118) {
+            pos = 100;
+            receita_pos = 1;
+          }
+    
+        }
+        else if (digitalRead(BTN_DESCE)) {
+         receita_pos--;
+         pos = pos-2;
+          if (pos < 100) {
+            pos = 118;
+            receita_pos = 10;
+          }
+        }
+       
+       else if(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA)){
+          carregarReceitas = false;
+          return NULL;
+        }
+        
+        else if (digitalRead(BTN_CONFIRMA)) {
+          if(val == 0){
+              lcd.clear();
+              lcd.setCursor(0,0);
+              lcd.print("NEGADO");
+            }
+          else { 
+               lcd.clear();
+               _mostura = true;
+               deletarReceitaEEPROM(pos,retornaPosicaoReceita(pos));
+               carregarReceitas = false;
+          }
+        
+          
+        }
+    
+        if (digitalRead(BTN_CANCELA)) {
+         carregarReceitas = false;
+         return NULL;
+        }
+        
+        delay(150);
+    }
+   
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("RECEITA DELETADA");
+  delay(2000);
+}
+
+void menuConfigVarMin(){
+
+  bool varMinConfig = true;
+  float varMin;
+  Serial.println(EEPROM_readAnything(10, varMin));
+  
+
+  while (varMinConfig) {
+      delay(150);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Escolha VarMin");
+      lcd.setCursor(0, 1);
+      lcd.print(varMin);
+      
+    if(digitalRead(BTN_SOBE)){
+           varMin = varMin + 0.5;
+             if(varMin > 5){
+              varMin = 0;
+             }
+      
+        }
+        else if(digitalRead(BTN_DESCE)){
+           varMin = varMin - 0.5;
+             if(varMin < 0){
+              varMin = 5;
+             }
+        }
+                
+        else if(digitalRead(BTN_CONFIRMA)){
+          Serial.println(EEPROM_writeAnything(10,varMin));
+          varMinConfig = false;
+        }
+        
+        if(digitalRead(BTN_CANCELA)){
+          varMinConfig = false ;
+          
+        }
+  }
+}
+
+void menuConfigTempFerv(){
+  
+  bool varFervTemp = true;
+  float tempFerv;
+  Serial.println(EEPROM_readAnything(14, tempFerv));
+  
+
+  while (varFervTemp) {
+      delay(150);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Escolha Temp Ferv");
+      lcd.setCursor(0, 1);
+      lcd.print(tempFerv);
+      
+    if(digitalRead(BTN_SOBE)){
+           tempFerv = tempFerv + 0.5;
+             if(tempFerv > 110){
+              tempFerv = 0;
+             }
+      
+        }
+        else if(digitalRead(BTN_DESCE)){
+           tempFerv = tempFerv - 0.5;
+             if(tempFerv < 0){
+              tempFerv = 110;
+             }
+        }
+        
+        else if(digitalRead(BTN_CONFIRMA)){
+          Serial.println(EEPROM_writeAnything(14,tempFerv));
+          varFervTemp = false;
+        }
+        
+        if(digitalRead(BTN_CANCELA)){
+          varFervTemp = false ;
+          
+        }
+  }
+ 
 }

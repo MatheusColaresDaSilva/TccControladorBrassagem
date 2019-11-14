@@ -86,11 +86,11 @@ byte setaPraBaixoIcon[8] = {
   0B00100
 };
 
-String _menuItems[] = {"Criar Receita", "Iniciar Brassagem"};
+String _menuItems[] = {"Iniciar Brassagem","Criar Receita","Deletar Receita","Config Variacao","Config Ferv Temp"};
 String _menuMostura[] = {"Mostura 1", "Mostura 2", "Mostura 3",
                          "Mostura 4", "Mostura 5", "Mostura 6",
                          "Mostura 7", "Mostura 8", "Mostura 9","Mostura 10"};
-String _menuFervura[] = {"Tempo","Lupulo 1", "Lupulo 2", "Lupulo 3",
+String _menuFervura[] = {"Fervura","Lupulo 1", "Lupulo 2", "Lupulo 3",
                          "Lupulo 4", "Lupulo 5", "Lupulo 6",
                          "Lupulo 7", "Lupulo 8", "Lupulo 9","Lupulo 10"};                         
 
@@ -101,6 +101,8 @@ int _menuAtual=0;
 bool _menuAtualMostura=false;
 bool _menuAtualFervura=false;
 bool _menuAtualNome=false;
+bool _menuConfigVarMin=false;
+bool _menuConfigTempFerv=false;
 
 int letra=0;
 int letraGravar=0;
@@ -196,7 +198,12 @@ void addNomeReceita() {
         }
         
       }
-      
+
+      if(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA)){
+          _menuAtualNome = false;
+          return NULL;
+      }
+        
       if(digitalRead(BTN_CONFIRMA)){
        lcd.clear();
             gravaReceitaEEPROM(verificaPosicaoMemoriaVazia(), nomeReceita, receita[0]);
@@ -279,6 +286,13 @@ void menuMostura(){
               tempo = 999;
              }
         }
+
+        else if(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA)){
+          timeTemp = false ;
+          _menuAtualMostura = false;
+          return NULL;
+        }
+
         else if(digitalRead(BTN_CONFIRMA)){
           timeTemp = false ;
         }
@@ -310,7 +324,15 @@ void menuMostura(){
               tempratura = 120;
              }
         }
+
+        else if(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA)){
+          timeTemp = false ;
+          _menuAtualMostura = false;
+          return NULL;
+        }
+        
         else if(digitalRead(BTN_CONFIRMA)){
+          EEPROM_readAnything(10, variacaoMinima);
           addEtapaMostura(receita[0].mostura,posicaoMostura,tempratura,(int) tempo,variacaoMinima );
           posicaoMostura++;
            timeTemp = true ;
@@ -345,7 +367,8 @@ void menuFervura(){
   bool timeTemp = true;
   int tempo = 0;
   int tempoLupulo = 255;
-  float tempratura = 0;
+  float tempratura;
+  EEPROM_readAnything(14, tempratura);
   
  while(_menuAtualFervura && posicaoFervura < 2){
     
@@ -378,6 +401,13 @@ void menuFervura(){
               tempo = 999;
              }
         }
+        
+        else if(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA)){
+          timeTemp = false ;
+          _menuAtualFervura = false;
+          return NULL;
+        }
+        
         else if(digitalRead(BTN_CONFIRMA)){
           timeTemp = false ;
         }
@@ -409,6 +439,13 @@ void menuFervura(){
               tempratura = 120;
              }
         }
+        
+        else if(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA)){
+          timeTemp = false ;
+          _menuAtualFervura = false;
+          return NULL;
+        }
+        
         else if(digitalRead(BTN_CONFIRMA)){
           addEtapaFervura(receita[0].fervura,tempratura,(int) tempo);
           posicaoFervura++;
@@ -466,6 +503,13 @@ void menuFervura(){
               tempoLupulo = 255;
              }
         }
+        
+        else if(digitalRead(BTN_CONFIRMA) && digitalRead(BTN_CANCELA)){
+          timeTemp = false ;
+          _menuAtualFervura = false;
+          return NULL;
+        }
+        
         else if(digitalRead(BTN_CONFIRMA)){
           addLupulo(receita[0].lupulo,posicaoFervura-1,(int) tempoLupulo);
           posicaoFervura++;
@@ -499,7 +543,7 @@ void mexerMenu(){
   
  if(digitalRead(BTN_SOBE)){
      _menuAtual++;
-       if(_menuAtual >1){
+       if(_menuAtual >4){
         _menuAtual = 0;
        }
 
@@ -507,13 +551,17 @@ void mexerMenu(){
   else if(digitalRead(BTN_DESCE)){
      _menuAtual--;
        if(_menuAtual < 0){
-        _menuAtual = 1;
+        _menuAtual = 4;
        }
   }
 
   if(digitalRead(BTN_CONFIRMA)){
     switch(_menuAtual){
        case 0:
+       escolheReceita();
+       break;
+       
+       case 1:
        _menuAtualMostura = true;
         menuMostura();
        _menuAtualMostura = false;
@@ -525,8 +573,16 @@ void mexerMenu(){
        _menuAtualNome = false;
        break;
 
-       case 1:
-       escolheReceita();
+       case 2:
+       deletarReceita();
+       break;
+
+       case 3:
+        menuConfigVarMin();
+       break;
+
+       case 4:
+        menuConfigTempFerv();
        break;
     }
   }
@@ -538,6 +594,7 @@ void imprimirEtapa(){
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Etapa ");
+      lcd.setCursor(6,0);
       lcd.print(_step);
 }
 

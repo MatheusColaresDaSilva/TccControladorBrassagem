@@ -122,8 +122,8 @@ void setup() {
 
   lcd.begin(16, 2);
   
-  addVariacaoMinima(0.5);
-  
+  //addVariacaoMinima(0.5);
+  EEPROM_readAnything(10, variacaoMinima);
 
   iniciaSensorTemp();
   iniciarRtcDs3231();
@@ -170,7 +170,6 @@ void loop() {
   //addEtapaFervura(receita[0].fervura,33,120);
   //addLupulo(receita[0].lupulo,1,120);
   //addLupulo(receita[0].lupulo,2,60);
-  //addLupulo(receita[0].lupulo,3,0);
   //mostrarTemperatura();
   //mostrarHora();
   //Menu();
@@ -643,11 +642,11 @@ void adicionarLupuloFervura(int posicao){
         
         lcd.setCursor(0,0);
         lcd.print("ADD LUPULO ");
-        lcd.print(posicao);
+        lcd.print(posicao + 1);
         lcd.setCursor(0,1);
         lcd.print("Press Confirmar");
         Serial.print("ADICIONE LUPULO MINUTO->");
-        Serial.println(posicao);
+        Serial.println(posicao + 1);
 
        tocarBuzzer();
 
