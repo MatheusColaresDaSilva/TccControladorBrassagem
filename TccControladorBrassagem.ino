@@ -1,3 +1,43 @@
+/*
+  RECEITA
+
+   10 - 13   varMin |Dez Bytes|
+   14 - 17   TempFerv |Dez Bytes|
+
+   100 - 101  Index  1   |Int Dois Bytes|
+   102 - 103  Index  2   |Int Dois Bytes|
+   104 - 105  Index  3   |Int Dois Bytes|
+   106 - 107  Index  4   |Int Dois Bytes|
+   108 - 109  Index  5   |Int Dois Bytes|
+   110 - 111  Index  6   |Int Dois Bytes|
+   112 - 113  Index  7   |Int Dois Bytes|
+   114 - 115  Index  8   |Int Dois Bytes|
+   116 - 117  Index  9   |Int Dois Bytes|
+   118 - 119  Index 10   |Int Dois Bytes|
+
+   120 - 130  Nome  1   |Char Dez Bytes|
+   131 - 141  Nome  2   |Char Dez Bytes|
+   142 - 152  Nome  3   |Char Dez Bytes|
+   153 - 163  Nome  4   |Char Dez Bytes|
+   164 - 174  Nome  5   |Char Dez Bytes|
+   175 - 185  Nome  6   |Char Dez Bytes|
+   186 - 196  Nome  7   |Char Dez Bytes|
+   197 - 207  Nome  8   |Char Dez Bytes|
+   208 - 218  Nome  9   |Char Dez Bytes|
+   219 - 229  Nome  10  |Char Dez Bytes|
+
+   720 - 849    Recipe Info  1    |Struct Receita|
+   850 - 979  Recipe Info  2    |Struct Receita|
+   980 - 1109   Recipe Info  3    |Struct Receita|
+   1110 - 1239  Recipe Info  4    |Struct Receita|
+   1240 - 1369  Recipe Info  5    |Struct Receita|
+   1370 - 1499  Recipe Info  6    |Struct Receita|
+   1500 - 1629  Recipe Info  7    |Struct Receita|
+   1630 - 1759  Recipe Info  8    |Struct Receita|
+   1760 - 1889  Recipe Info  9    |Struct Receita|
+   1890 - 2019  Recipe Info 10    |Struct Receita|
+*/
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h> 
