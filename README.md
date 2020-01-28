@@ -11,7 +11,7 @@ Foi desenvolvido utilizando Arduino e com ele é possível:
  -  Configurar até 10 adições de lúpulo;
  -  Fazer enchimento automático da panela de mostura com o volume de água desejado;
  
- ##Itens necessários:
+ ## Itens necessários:
  - Display LCD 16X2;
  - Push-Button;
  - Sensor de Temperatura DS18B20;
@@ -20,3 +20,4 @@ Foi desenvolvido utilizando Arduino e com ele é possível:
  - Válvula Solenoide;
  - Sensor de Fluxo de Água;
  - Buzzer;
+ 
