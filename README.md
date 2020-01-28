@@ -21,3 +21,7 @@ Foi desenvolvido utilizando Arduino e com ele é possível:
  - Sensor de Fluxo de Água;
  - Buzzer;
  
+## Portas
+
+## Esquema do projeto
+![esquema projeto](https://user-images.githubusercontent.com/29753301/73300000-0419a480-41ef-11ea-810d-3890823658a2.png)
